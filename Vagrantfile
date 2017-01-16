@@ -10,14 +10,21 @@ if `vagrant --version` < 'Vagrant 1.5.0'
 end
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
-
-  config.vm.box = "precise32"
-  config.vm.box_url = "http://files.vagrantup.com/precise32.box"
-  config.vm.hostname = 'vip.local'
+  #config.vm.box = "precise32"
+  #config.vm.box_url = "http://files.vagrantup.com/precise32.box"
+  # Lets use a better starting box...
+  config.vm.box = "bento/ubuntu-12.04-i386"
+  config.vm.hostname = 'vip.localhost'
   config.vm.network :private_network, ip: "10.86.73.80"
-  config.ssh.insert_key = false #see https://github.com/Automattic/vip-quickstart/issues/502
-  config.ssh.username = "vagrant"
-  config.ssh.password = "vagrant"
+  # Ensure SSH port forwarding gets setup right
+  # @see https://realguess.net/2015/10/06/overriding-the-default-forwarded-ssh-port-in-vagrant/
+  config.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh", disabled: true
+  config.vm.network :forwarded_port, guest: 22, host: 2299, auto_correct: true
+
+  # Not sure why this was ever an issue - must have been vagrant/virtualbox version related.
+  #config.ssh.insert_key = false #see https://github.com/Automattic/vip-quickstart/issues/502
+  #config.ssh.username = "vagrant"
+  #config.ssh.password = "vagrant"
 
 
   # Virtualbox overrides
@@ -27,6 +34,15 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
     # Use 2 CPUs
     v.cpus = 2
+
+    # Lets not peg host cpu
+    v.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
+    # Speed up disk io
+    vb.customize [
+      "storagectl", :id,
+      "--name", "SATA Controller",
+      "--hostiocache", "on"
+    ]
 
     v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
@@ -60,4 +76,4 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     }
   end
 
-end
+:end
