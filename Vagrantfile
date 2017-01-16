@@ -4,18 +4,33 @@
 # Vagrantfile API/syntax version. Don't touch unless you know what you're doing!
 VAGRANTFILE_API_VERSION = "2"
 
-#Vagrant.require_version ">= 1.5.0"
-if `vagrant --version` < 'Vagrant 1.5.0'
-    abort('Your Vagrant is too old. Please install at least 1.5.0')
+#Vagrant.require_version ">= 1.8.0"
+if `vagrant --version` < 'Vagrant 1.8.0'
+    abort('Your Vagrant is too old. Please install at least 1.8.0')
 end
 
+[
+  { :name => "vagrant-hostsupdater", :version => ">= 1.0.2" },
+  { :name => "vagrant-triggers", :version => ">= 0.5.3" },
+  { :name => "vagrant-vbguest", :version => ">= 0.13.0"}
+].each do |plugin|
+
+  if not Vagrant.has_plugin?(plugin[:name], plugin[:version])
+    raise "#{plugin[:name]} #{plugin[:version]} is required. Please run `vagrant plugin install #{plugin[:name]}`"
+  end
+end
+
+
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+
   #config.vm.box = "precise32"
   #config.vm.box_url = "http://files.vagrantup.com/precise32.box"
   # Lets use a better starting box...
   config.vm.box = "bento/ubuntu-12.04-i386"
-  config.vm.hostname = 'vip.localhost'
+
+  config.vm.hostname = 'vip.local'
   config.vm.network :private_network, ip: "10.86.73.80"
+
   # Ensure SSH port forwarding gets setup right
   # @see https://realguess.net/2015/10/06/overriding-the-default-forwarded-ssh-port-in-vagrant/
   config.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh", disabled: true
@@ -25,7 +40,6 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   #config.ssh.insert_key = false #see https://github.com/Automattic/vip-quickstart/issues/502
   #config.ssh.username = "vagrant"
   #config.ssh.password = "vagrant"
-
 
   # Virtualbox overrides
   config.vm.provider "virtualbox" do |v|
@@ -38,11 +52,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     # Lets not peg host cpu
     v.customize ["modifyvm", :id, "--cpuexecutioncap", "50"]
     # Speed up disk io
-    vb.customize [
-      "storagectl", :id,
-      "--name", "SATA Controller",
-      "--hostiocache", "on"
-    ]
+    v.customize ["storagectl", :id, "--name", "SATA Controller", "--hostiocache", "on"]
 
     v.customize ["modifyvm", :id, "--natdnshostresolver1", "on"]
     v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
@@ -76,4 +86,4 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     }
   end
 
-:end
+end
