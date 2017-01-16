@@ -14,6 +14,10 @@ class svnupgrade {
     notify => Exec['apt-get update svn']
   }
 
+  exec { '/usr/bin/apt-key':
+    command => '/usr/bin/apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 0xeaa903e3a2f4c039',
+  }
+
   exec { 'apt-get update svn':
     command     => 'sudo apt-get update',
     refreshonly => true,
