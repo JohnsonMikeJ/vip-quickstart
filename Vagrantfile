@@ -28,13 +28,13 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   # Lets use a better starting box...
   config.vm.box = "bento/ubuntu-12.04-i386"
 
-  config.vm.hostname = 'vip.local'
+  config.vm.hostname = 'vip.test'
   config.vm.network :private_network, ip: "10.86.73.80"
 
   # Ensure SSH port forwarding gets setup right
   # @see https://realguess.net/2015/10/06/overriding-the-default-forwarded-ssh-port-in-vagrant/
   config.vm.network :forwarded_port, guest: 22, host: 2222, id: "ssh", disabled: true
-  config.vm.network :forwarded_port, guest: 22, host: 2299, auto_correct: true
+  config.vm.network :forwarded_port, guest: 22, host: 2269, auto_correct: true
 
   # Not sure why this was ever an issue - must have been vagrant/virtualbox version related.
   #config.ssh.insert_key = false #see https://github.com/Automattic/vip-quickstart/issues/502
@@ -58,6 +58,16 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     v.customize ["modifyvm", :id, "--natdnsproxy1", "on"]
     v.customize ["modifyvm", :id, "--ioapic", "on"]
     v.customize ["modifyvm", :id, "--nictype1", "Am79C973"]
+
+    # Nuke Audio
+    v.customize ["modifyvm", :id, "--audio", "none"]
+
+    # Nuke Remote Display
+    v.customize ["modifyvm", :id, "--vrde", "off"]
+
+    # Every creation needs a name...
+    v.name = "PMD VIP Dev Environment"
+
   end
 
   # VMWare Fusion overrides
@@ -82,7 +92,7 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
     puppet.manifest_file  = "init.pp"
     puppet.options = ['--templatedir', '/srv/puppet/files']
     puppet.facter = {
-      "quickstart_domain" => 'vip.local',
+      "quickstart_domain" => 'vip.test',
     }
   end
 
